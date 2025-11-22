@@ -33,7 +33,8 @@ class Server:
                 if not data:
                     break
                 
-                print(f"Received: {json.loads(data)['text']}")
+                message = json.loads(data)
+                print(f"{message['username']}: {message['text']}")
                 
                 # Просто пересылаем сообщение всем клиентам
                 self.broadcast(data, client_socket)

@@ -3,9 +3,12 @@ import threading
 import json
 
 class Client:
-    def __init__(self, host='localhost', port=8888):
+    def __init__(self, data, host='localhost', port=8888):
         self.host = host
         self.port = port
+        self.data = data
+        self.username = data['username']
+        self.userid = data['userid']
         self.socket = None
         self.running = False
     
@@ -38,7 +41,7 @@ class Client:
                 message = self.recv_data(1024)
                 if not message:
                     break
-                print(f"\nReceived: {message['text']}\n> ", end='')
+                print(f"\n{message['username']}: {message['text']}\n> ", end='')
             except:
                 break
         
@@ -54,7 +57,11 @@ class Client:
                 if message.lower() == 'quit':
                     break
                 
-                self.send_data({"text": message})
+                self.send_data({
+                    "text": message,
+                    "username": self.username,
+                    "userid": self.userid,
+                    })
             except EOFError:
                 break
             except Exception as e:

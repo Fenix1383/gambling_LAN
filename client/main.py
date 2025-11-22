@@ -44,6 +44,6 @@ def post_connect(data, ip, port):
 
 if __name__ == "__main__":
     data, ip, port = pre_connect()
-    client = Client(ip, port)
+    client = Client(data, ip, port)
     client.start()
     post_connect(data, ip, port)
