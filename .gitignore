@@ -1,2 +1,3 @@
 gambling/
 test*.bat
+*/__pycache__/
