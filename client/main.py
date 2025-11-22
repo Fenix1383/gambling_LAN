@@ -1,69 +1,49 @@
-import socket
-import threading
+from connector import Client
 import json
+import settings as st
+import uuid
 
-class Client:
-    def __init__(self, host='localhost', port=8888):
-        self.host = host
-        self.port = port
-        self.socket = None
-        self.running = False
-    
-    def start(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((self.host, self.port))
-        self.running = True
-        
-        # Поток для приема сообщений
-        receive_thread = threading.Thread(target=self.receive_messages)
-        receive_thread.daemon = True
-        receive_thread.start()
-        
-        # Основной поток для ввода
-        self.send_messages()
-    
-    def send_data(self, message):
-        try:
-            self.socket.send(json.dumps(message).encode('utf-8'))
-        except Exception as e:
-            print(f"Send error: {e}")
+def create_config():
+    data = {
+        "username": input(st.username_question),
+        "userid": str(uuid.uuid4()),
+        "version": st.version,
+    }
+    return data
 
-    def recv_data(self, bufsize=1024):
-        message = self.socket.recv(1024).decode('utf-8')
-        return json.loads(message)
+def config_is_correct(conf: dict):
+    return ("version" in conf and "username" in conf and "userid" in conf)
 
-    def receive_messages(self):
-        while self.running:
-            try:
-                message = self.recv_data(1024)
-                if not message:
-                    break
-                print(f"\nReceived: {message['text']}\n> ", end='')
-            except:
-                break
-        
-        self.running = False
-        print("\nDisconnected from server")
+def pre_connect():
+    print(f"{st.title} {st.version}\n")
+    try:
+        with open('config.json', 'r') as file:
+            data = json.load(file)
+        if not config_is_correct(data): raise Exception
+    except:
+        data = create_config()
+        # json.dump(data, file, indent=4)
     
-    def send_messages(self):
-        print("Connected to server. Type messages (type 'quit' to exit):")
-        
-        while self.running:
-            try:
-                message = input("> ")
-                if message.lower() == 'quit':
-                    break
-                
-                self.send_data({"text": message})
-            except EOFError:
-                break
-            except Exception as e:
-                print(f"Send error: {e}")
-                break
-        
-        self.running = False
-        self.socket.close()
+    if ("lastserver" in data and 
+            input(f"{st.connect_server_question}({data['lastserver'][0]}:{data['lastserver'][1]}) ").lower() == 'y'):
+        return data, *data['lastserver']
+    else:
+        return [data, input(st.ip_question), int(input(st.port_question))]
+    
+def post_connect(data, ip, port):
+    if "lastserver" in data and data['lastserver'] != [ip, port]:
+        if input(st.save_server_question).lower() == 'y':
+            data['lastserver'] = [ip, port]
+    else:
+        data['lastserver'] = [ip, port]
+
+    with open('config.json', 'w') as file:
+        json.dump(data, file, indent=4)
+
+    
 
 if __name__ == "__main__":
-    client = Client()
+    data, ip, port = pre_connect()
+    client = Client(ip, port)
     client.start()
+    post_connect(data, ip, port)
