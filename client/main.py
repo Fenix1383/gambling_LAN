@@ -1,5 +1,6 @@
 import socket
 import threading
+import json
 
 class Client:
     def __init__(self, host='localhost', port=8888):
@@ -21,15 +22,27 @@ class Client:
         # Основной поток для ввода
         self.send_messages()
     
+    def send_data(self, message):
+        try:
+            self.socket.send(json.dumps(message).encode('utf-8'))
+        except Exception as e:
+            print(f"Send error: {e}")
+
+    def recv_data(self, bufsize=1024):
+        message = self.socket.recv(1024).decode('utf-8')
+        return json.loads(message)
+
     def receive_messages(self):
         while self.running:
             try:
-                message = self.socket.recv(1024).decode('utf-8')
+                message = self.recv_data(1024)
                 if not message:
                     break
-                print(f"\nReceived: {message}\n> ", end='')
+                print(1)
+                print(f"\nReceived: {message['text']}\n> ", end='')
             except:
                 break
+        print(2)
         
         self.running = False
         print("\nDisconnected from server")
@@ -43,7 +56,7 @@ class Client:
                 if message.lower() == 'quit':
                     break
                 
-                self.socket.send(message.encode('utf-8'))
+                self.send_data({"text": message})
             except EOFError:
                 break
             except Exception as e:

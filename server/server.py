@@ -1,5 +1,6 @@
 import socket
 import threading
+import json
 
 class Server:
     def __init__(self, host='localhost', port=8888):
@@ -32,7 +33,7 @@ class Server:
                 if not data:
                     break
                 
-                print(f"Received: {data}")
+                print(f"Received: {json.loads(data)['text']}")
                 
                 # Просто пересылаем сообщение всем клиентам
                 self.broadcast(data, client_socket)
