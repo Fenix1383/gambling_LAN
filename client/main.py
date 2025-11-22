@@ -38,11 +38,9 @@ class Client:
                 message = self.recv_data(1024)
                 if not message:
                     break
-                print(1)
                 print(f"\nReceived: {message['text']}\n> ", end='')
             except:
                 break
-        print(2)
         
         self.running = False
         print("\nDisconnected from server")
